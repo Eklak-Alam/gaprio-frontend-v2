@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gaprio Notification Test</title>
+    <style>
+        body {
+            background: #0a0a0f;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            padding: 40px;
+        }
+
+        .card {
+            background: rgba(20, 20, 28, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #F97316;
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            border: none;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 8px 4px;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #log {
+            background: #111;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .status {
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .ok {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .warn {
+            background: rgba(234, 179, 8, 0.15);
+            color: #eab308;
+        }
+
+        .err {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>🔔 Notification Test</h1>
+        <p>Use this page to test desktop notifications from Gaprio</p>
+
+        <div id="status"></div>
+
+        <h3 style="margin-top: 24px;">Step 1: Check Permission</h3>
+        <button onclick="checkPermission()">Check Permission</button>
+        <button onclick="requestPermission()">Request Permission</button>
+
+        <h3 style="margin-top: 16px;">Step 2: Check Service Worker</h3>
+        <button onclick="checkSW()">Check SW Status</button>
+        <button onclick="registerSW()">Register Service Worker</button>
+        <button onclick="unregisterSW()" class="secondary">Unregister Service Worker</button>
+
+        <h3 style="margin-top: 16px;">Step 3: Test Notification</h3>
+        <button onclick="testBasicNotification()">Basic Browser Notification</button>
+        <button onclick="testSWNotification()">SW Notification (like Gaprio)</button>
+
+        <h3 style="margin-top: 16px;">Step 4: Create Test Action</h3>
+        <button onclick="createTestAction()">Create Fake Pending Action</button>
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        // ✅ URL FIX: Automatically uses localhost for local dev, and api.gaprio.in for production!
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_URL = isLocalhost ? 'http://localhost:5000/api' : 'https://api.gaprio.in/api';
+
+        function log(msg, type = 'info') {
+            const el = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const prefix = type === 'ok' ? '✅' : type === 'err' ? '❌' : type === 'warn' ? '⚠️' : 'ℹ️';
+            el.textContent = `[${time}] ${prefix} ${msg}\n` + el.textContent;
+        }
+
+        function setStatus(msg, cls) {
+            document.getElementById('status').innerHTML = `<div class="status ${cls}">${msg}</div>`;
+        }
+
+        function checkPermission() {
+            if (!('Notification' in window)) {
+                setStatus('Notifications NOT supported in this browser', 'err');
+                log('Notification API not available', 'err');
+                return;
+            }
+            const perm = Notification.permission;
+            if (perm === 'granted') {
+                setStatus('✅ Notification permission: GRANTED', 'ok');
+                log(`Permission: ${perm}`, 'ok');
+            } else if (perm === 'denied') {
+                setStatus('❌ Permission DENIED. Go to chrome://settings/content/notifications and allow localhost', 'err');
+                log(`Permission: ${perm} — you need to allow it in Chrome settings`, 'err');
+            } else {
+                setStatus('⚠️ Permission not yet asked. Click "Request Permission"', 'warn');
+                log(`Permission: ${perm}`, 'warn');
+            }
+        }
+
+        async function requestPermission() {
+            const perm = await Notification.requestPermission();
+            log(`Permission result: ${perm}`, perm === 'granted' ? 'ok' : 'err');
+            checkPermission();
+        }
+
+        async function checkSW() {
+            if (!('serviceWorker' in navigator)) {
+                log('ServiceWorker not supported', 'err');
+                return;
+            }
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            log(`Found ${registrations.length} service worker(s):`);
+            for (const reg of registrations) {
+                const sw = reg.active || reg.installing || reg.waiting;
+                log(`  Scope: ${reg.scope}, State: ${sw?.state || 'none'}, Script: ${reg.active?.scriptURL || 'none'}`);
+            }
+
+            // Check gaprio-sw-data cache
+            try {
+                const cache = await caches.open('gaprio-sw-data');
+                const resp = await cache.match('/_sw_credentials');
+                if (resp) {
+                    const data = JSON.parse(await resp.text());
+                    log(`  Cached credentials: API=${data.apiBaseUrl}, Token=${data.authToken ? 'yes (' + data.authToken.substring(0, 20) + '...)' : 'NO'}`, 'ok');
+                    log(`  Known action IDs: ${data.knownIds?.length || 0}`, 'info');
+                } else {
+                    log('  No cached credentials found', 'warn');
+                }
+            } catch (e) {
+                log(`  Cache check error: ${e.message}`, 'err');
+            }
+        }
+
+        async function registerSW() {
+            try {
+                const reg = await navigator.serviceWorker.register('/sw-notifications.js', { scope: '/' });
+                log(`Successfully registered SW: ${reg.scope}`, 'ok');
+                checkSW();
+            } catch (e) {
+                log(`Registration failed: ${e.message}`, 'err');
+            }
+        }
+
+        async function unregisterSW() {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const reg of registrations) {
+                await reg.unregister();
+            }
+            log('Unregistered all service workers', 'warn');
+
+            // Clear SW cache too
+            await caches.delete('gaprio-sw-data');
+            log('Cleared SW credential cache', 'warn');
+
+            log('Now click "Register Service Worker" and then refresh the Dashboard tab', 'ok');
+        }
+
+        function testBasicNotification() {
+            if (Notification.permission !== 'granted') {
+                log('Permission not granted! Click "Request Permission" first', 'err');
+                return;
+            }
+            const n = new Notification('Gaprio Test', {
+                body: 'If you can see this, basic notifications work! ✅',
+                icon: '/favicon.ico',
+                requireInteraction: true,
+            });
+            n.onclick = () => { log('Notification clicked!', 'ok'); n.close(); };
+            log('Basic notification sent', 'ok');
+        }
+
+        async function testSWNotification() {
+            if (Notification.permission !== 'granted') {
+                log('Permission not granted!', 'err');
+                return;
+            }
+            const reg = await navigator.serviceWorker.ready;
+            if (!reg) {
+                log('No active service worker', 'err');
+                return;
+            }
+            await reg.showNotification('Gaprio • Test Action', {
+                body: 'Create a test task in Asana\n\nClick to execute this action.',
+                icon: '/favicon.ico',
+                tag: 'gaprio-test-' + Date.now(),
+                requireInteraction: true,
+                // ✅ URL FIX: Uses the dynamic API_URL
+                data: { actionId: 'test-123', tool: 'asana_create_task', apiBaseUrl: API_URL, authToken: '' },
+                actions: [
+                    { action: 'execute', title: '▶ Execute' },
+                    { action: 'dismiss', title: '✕ Dismiss' }
+                ],
+            });
+            log('SW notification sent! Switch to another tab to see it.', 'ok');
+        }
+
+        async function createTestAction() {
+            // ✅ URL FIX: Removed the hardcoded localhost here, it uses the global API_URL now!
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                log(`No auth token found. Please login at ${isLocalhost ? 'localhost:3000' : 'www.gaprio.in'} first.`, 'err');
+                return;
+            }
+            try {
+                // Check current pending actions
+                const resp = await fetch(`${API_URL}/monitoring/actions?status=pending`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await resp.json();
+                log(`Current pending actions: ${data.data?.length || 0}`, 'info');
+                if (data.data?.length > 0) {
+                    log('There are already pending actions. The notification should appear!', 'ok');
+                    data.data.forEach(a => log(`  → ${a.description} (${a.suggested_tool})`));
+                } else {
+                    log('No pending actions. Send a message in a monitored Slack channel to trigger one.', 'warn');
+                }
+            } catch (e) {
+                log(`API error: ${e.message}`, 'err');
+            }
+        }
+
+        // Auto-run checks on load
+        checkPermission();
+        checkSW();
+
+        // Listen for SW messages
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                log(`SW message: ${JSON.stringify(event.data)}`, 'info');
+            });
+        }
+    </script>
+</body>
+
+</html>
