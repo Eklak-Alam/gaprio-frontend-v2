@@ -1,46 +1,30 @@
+// src/api/user.api.js
 import { apiClient } from './apiClient';
 
 export const userApi = {
-    /**
-     * Fetches the user profile, onboarding status, and active integrations.
-     * Backend returns: { success: true, data: { profile: { ..., activeConnections: [] } } }
-     */
+    // Get my personal profile details
     getProfile: async () => {
-        try {
-            const response = await apiClient.get('/users/profile');
-            // We return the whole body so the components can access response.data.profile
-            return response.data; 
-        } catch (error) {
-            console.error("Error fetching profile:", error);
-            throw error;
-        }
-    },
-    
-    /**
-     * Updates profile fields (role, goal, companySize, etc.)
-     * This is called during the Onboarding flow.
-     */
-    updateProfile: async (profileData) => {
-        try {
-            const response = await apiClient.patch('/users/profile', profileData);
-            return response.data;
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            throw error;
-        }
+        const response = await apiClient.get('/users/me');
+        return response.data;
     },
 
-    /**
-     * Updates the user's password.
-     * Expects: { oldPassword, newPassword }
-     */
+    // Update my profile details
+    updateProfile: async (profileData) => {
+        // profileData can include: firstName, lastName, goal, avatarUrl
+        const response = await apiClient.put('/users/me', profileData);
+        return response.data;
+    },
+
+    // Change password (will log out other devices!)
     changePassword: async (passwordData) => {
-        try {
-            const response = await apiClient.put('/users/change-password', passwordData);
-            return response.data;
-        } catch (error) {
-            console.error("Error changing password:", error);
-            throw error;
-        }
+        // passwordData requires: oldPassword, newPassword
+        const response = await apiClient.put('/users/me/password', passwordData);
+        return response.data;
+    },
+
+    // Delete my own account
+    deleteAccount: async () => {
+        const response = await apiClient.delete('/users/me');
+        return response.data;
     }
 };

@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast"; // 1. IMPORT THE TOASTER
 import "./globals.css";
 import Navbar from "@/components/global/Navbar";
 import AuthGuard from "@/components/global/AuthGuard";
@@ -84,9 +85,22 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-[#050505] text-white flex flex-col selection:bg-[#FC8B32] selection:text-white">
-        <AuthGuard>
+        
+        {/* 2. ADD THE TOASTER HERE */}
+        <Toaster 
+          position="top-center" 
+          toastOptions={{
+            // You can set default styling here so you don't have to style it in every component
+            style: {
+              background: '#1a1a1a',
+              color: '#fff',
+              border: '1px solid #333',
+            },
+          }} 
+        />
 
-        {children}
+        <AuthGuard>
+          {children}
         </AuthGuard>
       </body>
     </html>
