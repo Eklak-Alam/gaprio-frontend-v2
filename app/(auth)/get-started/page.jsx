@@ -10,10 +10,10 @@ import { authApi } from '@/api/auth.api';
 
 gsap.registerPlugin(useGSAP);
 
-const PUBLIC_DOMAINS = [
-    'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 
-    'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'
-];
+// const PUBLIC_DOMAINS = [
+//     'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 
+//     'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'
+// ];
 
 export default function GetStartedPage() {
     const router = useRouter();
@@ -55,16 +55,16 @@ export default function GetStartedPage() {
 
         const domain = emailParts[1];
 
-        // 1. Frontend check: Reject public domains instantly
-        if (PUBLIC_DOMAINS.includes(domain)) {
-            toast.error(`Professional email required. @${domain} is not supported.`, {
-                duration: 4000,
-                style: { background: '#1a0f0f', color: '#E2E8CE', border: '1px solid #7f1d1d' }
-            });
-            setEmail('');
-            setTimeout(() => emailInputRef.current?.focus(), 100);
-            return;
-        }
+        // 1. Frontend check: Reject public domains instantly (COMMENTED OUT TO ALLOW EVERY EMAIL)
+        // if (PUBLIC_DOMAINS.includes(domain)) {
+        //     toast.error(`Professional email required. @${domain} is not supported.`, {
+        //         duration: 4000,
+        //         style: { background: '#1a0f0f', color: '#E2E8CE', border: '1px solid #7f1d1d' }
+        //     });
+        //     setEmail('');
+        //     setTimeout(() => emailInputRef.current?.focus(), 100);
+        //     return;
+        // }
 
         setIsLoading(true);
 

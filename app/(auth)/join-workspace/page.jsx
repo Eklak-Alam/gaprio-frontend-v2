@@ -64,7 +64,7 @@ function JoinWorkspaceForm() {
             const deviceId = localStorage.getItem('deviceId') || 'web-browser';
             
             // Backend will auto-match the orgId using the email domain!
-            const response = await authApi.registerMember({ 
+            await authApi.registerMember({ 
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: queryEmail,
@@ -72,19 +72,13 @@ function JoinWorkspaceForm() {
                 deviceId
             });
             
-            // response.data contains the session (user, accessToken, refreshToken)
-            const { user, accessToken, refreshToken } = response.data;
-            
-            // Update Zustand Store
-            setAuth(user, null, accessToken, refreshToken);
-            
-            toast.success(`Welcome aboard, ${user.firstName}! Core online.`, {
+            toast.success(`Check your email for the verification code.`, {
                 style: { background: '#0c0c0c', color: '#fff', border: '1px solid #FF7F11' },
                 iconTheme: { primary: '#FF7F11', secondary: '#fff' }
             });
             
-            // Redirect to App
-            router.push('/dashboard');
+            // Redirect to Verification Screen
+            router.push(`/verify-email?email=${encodeURIComponent(queryEmail)}`);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Access Denied. Verification failed.', {
                 style: { background: '#1a0f0f', color: '#E2E8CE', border: '1px solid #7f1d1d' }

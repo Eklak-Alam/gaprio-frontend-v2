@@ -67,7 +67,7 @@ function CreateWorkspaceForm() {
             const domain = queryEmail.split('@')[1]; // Extract domain for the backend
             
             // Backend will create Org + Admin User
-            const response = await authApi.registerAdmin({ 
+            await authApi.registerAdmin({ 
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: queryEmail,
@@ -78,19 +78,14 @@ function CreateWorkspaceForm() {
                 deviceId
             });
             
-            const { user, accessToken, refreshToken } = response.data;
-            
-            // Update Zustand Store (Admin has absolute power!)
-            setAuth(user, null, accessToken, refreshToken);
-            
-            toast.success(`Workspace "${formData.orgName}" deployed!`, {
+            toast.success(`Workspace deployed! Check your email.`, {
                 icon: '🚀',
                 style: { background: '#0c0c0c', color: '#fff', border: '1px solid #FF7F11' },
                 iconTheme: { primary: '#FF7F11', secondary: '#fff' }
             });
             
-            // Redirect to App
-            router.push('/dashboard');
+            // Redirect to Verification Screen
+            router.push(`/verify-email?email=${encodeURIComponent(queryEmail)}`);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Deployment Failed. Please try again.', {
                 style: { background: '#1a0f0f', color: '#E2E8CE', border: '1px solid #7f1d1d' }

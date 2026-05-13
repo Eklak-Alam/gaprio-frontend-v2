@@ -11,7 +11,8 @@ const PUBLIC_ROUTES = [
     '/login',
     '/get-started',
     '/join-workspace',
-    '/create-workspace'
+    '/create-workspace',
+    '/verify-email'
 ];
 
 export default function AuthGuard({ children }) {

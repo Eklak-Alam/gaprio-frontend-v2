@@ -33,5 +33,19 @@ export const authApi = {
     logout: async (refreshToken) => {
         const response = await apiClient.post('/auth/logout', { refreshToken });
         return response.data;
+    },
+
+    // Verify user email with OTP
+    verifyEmail: async (data) => {
+        // data requires: email, code
+        const response = await apiClient.post('/auth/verify-email', data);
+        return response.data;
+    },
+
+    // Resend email verification code
+    resendVerification: async (data) => {
+        // data requires: email, firstName (optional)
+        const response = await apiClient.post('/auth/resend-verification', data);
+        return response.data;
     }
 };
