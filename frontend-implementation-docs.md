@@ -77,7 +77,7 @@
 
 | Route | Purpose | Key components | API calls | Auth required | Main functionality |
 | --- | --- | --- | --- | --- | --- |
-| `/` | Marketing landing | `Navbar`, `Hero`, `Platfoms`, `IntegrationGrid` | None | No | Marketing content + CTAs |
+| `/` | Marketing landing | `Navbar`, `Hero`, `Platforms`, `IntegrationGrid` | None | No | Marketing content + CTAs |
 | `/waitlist` | Early access request | Waitlist page component | `waitlistApi.joinWaitlist` | No | Submit waitlist form |
 | `/login` | Login | Auth form | `authApi.login` | No | Authenticate user |
 | `/get-started` | Entry flow | Email check | `authApi.checkDomain` | No | Decide join vs create |
@@ -105,7 +105,7 @@
 | Component | Purpose | Key props | Notes |
 | --- | --- | --- | --- |
 | `Hero` | Hero section + CTAs | None | Framer Motion animations; CTA to `/waitlist` and `/demo` |
-| `Platfoms` | Problem/stack cards | None | Responsive interactive card system |
+| `Platforms` | Problem/stack cards | None | Responsive interactive card system |
 | `IntegrationGrid` | Integration diagram | None | Animated connection map of tools |
 
 ### Dashboard (current: `dashboard2`)
