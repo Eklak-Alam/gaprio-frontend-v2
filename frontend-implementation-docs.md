@@ -236,7 +236,8 @@ flowchart LR
 
 **Accessibility concerns**
 - Heavy use of `<img>` without `next/image` and inconsistent alt text.
-- Some form inputs rely on placeholder text instead of explicit labels (varies by page).
+- OTP input grid on `/verify-email` uses six unlabeled inputs (no explicit `<label>` or `aria-label`).
+- Several icon-only buttons in dashboard2 components (e.g., `GoogleWorkspace` modal controls, `Sidebar` actions) lack `aria-label`s.
 
 **Production readiness**
 - Auth flow and dashboard UI exist but still depend on backend readiness.
@@ -253,4 +254,3 @@ flowchart LR
 | `postcss.config.mjs` | Tailwind v4 PostCSS integration |
 | `eslint.config.mjs` | Next.js core web vitals config |
 | `app/globals.css` | Tailwind theme tokens + global styles |
-
